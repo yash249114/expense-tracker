@@ -1,3 +1,4 @@
+// Elements
 const balanceEl = document.getElementById("balance");
 const incomeAmountEl = document.getElementById("income-amount");
 const expenseAmountEl = document.getElementById("expense-amount");
@@ -7,112 +8,153 @@ const descriptionEl = document.getElementById("description");
 const amountEl = document.getElementById("amount");
 const categoryEl = document.getElementById("category");
 const modeToggle = document.getElementById("mode-toggle");
+const ctx = document.getElementById("categoryChart").getContext("2d");
 
-// LocalStorage key
-let transactions = JSON.parse(localStorage.getItem("transactions-data")) || [];
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+let categoryChart = null;
 
-// Add Transaction
 transactionFormEl.addEventListener("submit", (e) => {
   e.preventDefault();
+  const description = descriptionEl.value.trim();
+  const amount = parseFloat(amountEl.value);
+  const category = categoryEl.value;
 
-  const transaction = {
-    id: Date.now(),
-    description: descriptionEl.value.trim(),
-    amount: parseFloat(amountEl.value),
-    category: categoryEl.value,
-  };
+  if (!description || isNaN(amount)) return;
 
-  transactions.push(transaction);
-  saveRender();
+  const tx = { id: Date.now(), description, amount, category };
+  transactions.push(tx);
+  persistRender();
   transactionFormEl.reset();
+  descriptionEl.focus();
 });
 
-// Save + Render
-function saveRender() {
-  localStorage.setItem("transactions-data", JSON.stringify(transactions));
-  renderTransactions();
-  updateSummary();
-  updateChart();
+function persistRender() {
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  renderAll();
 }
 
-// Update Summary
-function updateSummary() {
-  const balance = transactions.reduce((sum, t) => sum + t.amount, 0);
-  const income = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-  const expenses = transactions.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+function renderAll() {
+  renderTransactionList();
+  renderSummary();
+  renderChart();
+}
+
+function renderTransactionList() {
+  transactionListEl.innerHTML = "";
+  if (transactions.length === 0) {
+    transactionListEl.innerHTML = '<li style="color:var(--muted)">No transactions yet</li>';
+    return;
+  }
+
+  [...transactions].reverse().forEach(tx => {
+    const li = document.createElement("li");
+    li.className = "transaction " + (tx.amount >= 0 ? "income" : "expense");
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `<strong>${escapeHtml(tx.description)}</strong><small>${escapeHtml(tx.category)}</small>`;
+
+    const right = document.createElement("div");
+    const amt = document.createElement("div");
+    amt.className = "amount";
+    amt.textContent = formatCurrency(tx.amount);
+
+    const del = document.createElement("button");
+    del.className = "delete-btn";
+    del.setAttribute("aria-label", "Delete transaction");
+    del.textContent = "✕";
+    del.onclick = () => { removeTransaction(tx.id); };
+
+    right.appendChild(amt);
+    right.appendChild(del);
+
+    li.appendChild(meta);
+    li.appendChild(right);
+    transactionListEl.appendChild(li);
+  });
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+}
+
+function renderSummary() {
+  const balance = transactions.reduce((s,t)=>s + Number(t.amount || 0), 0);
+  const income = transactions.filter(t=>t.amount>0).reduce((s,t)=>s + Number(t.amount), 0);
+  const expenses = transactions.filter(t=>t.amount<0).reduce((s,t)=>s + Number(t.amount), 0);
 
   balanceEl.textContent = formatCurrency(balance);
   incomeAmountEl.textContent = formatCurrency(income);
   expenseAmountEl.textContent = formatCurrency(expenses);
 }
 
-// Render List
-function renderTransactions() {
-  transactionListEl.innerHTML = "";
-
-  [...transactions].reverse().forEach(t => {
-    const li = document.createElement("li");
-    li.classList.add("transaction", t.amount > 0 ? "income" : "expense");
-
-    li.innerHTML = `
-      <span>${t.description} • <small>${t.category}</small></span>
-      <span>${formatCurrency(t.amount)}
-        <button class="delete-btn" onclick="deleteTransaction(${t.id})">x</button>
-      </span>
-    `;
-
-    transactionListEl.appendChild(li);
-  });
-}
-
-// Delete
-function deleteTransaction(id) {
-  transactions = transactions.filter(t => t.id !== id);
-  saveRender();
-}
-
-// Format Currency
-function formatCurrency(num) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD"
-  }).format(num);
-}
-
-// Chart
-let chart;
-function updateChart() {
-  const categoryTotals = {};
-
-  transactions.forEach(t => {
-    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+// Chart: show income & expense per category (absolute numbers)
+function renderChart() {
+  const buckets = {};
+  transactions.forEach(t=>{
+    if(!buckets[t.category]) buckets[t.category] = { income:0, expense:0 };
+    if (t.amount >= 0) buckets[t.category].income += t.amount;
+    else buckets[t.category].expense += Math.abs(t.amount);
   });
 
-  const labels = Object.keys(categoryTotals);
-  const data = Object.values(categoryTotals);
+  const labels = Object.keys(buckets);
+  const incomeData = labels.map(l => buckets[l].income);
+  const expenseData = labels.map(l => buckets[l].expense);
 
-  if (chart) chart.destroy();
+  const data = {
+    labels,
+    datasets: [
+      { label: "Income", backgroundColor: "#10b981", data: incomeData },
+      { label: "Expenses", backgroundColor: "#ef4444", data: expenseData }
+    ]
+  };
 
-  chart = new Chart(document.getElementById("chart"), {
+  if (categoryChart) categoryChart.destroy();
+  categoryChart = new Chart(ctx, {
     type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Amount by Category",
-        backgroundColor: "#6a82fb",
-        data,
-      }],
-    },
+    data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "top" } },
+      scales: {
+        x: { stacked: true, grid: { display:false } },
+        y: { stacked: true, beginAtZero:true }
+      }
+    }
   });
 }
 
-// Dark Mode
+function removeTransaction(id){
+  transactions = transactions.filter(t => t.id !== id);
+  persistRender();
+}
+
+function formatCurrency(n){
+  return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(n);
+}
+
+/* Dark mode handling */
+function loadMode() {
+  const saved = localStorage.getItem("dark-mode");
+  if (saved === "true") {
+    document.body.classList.add("dark");
+    modeToggle.textContent = "☀";
+    modeToggle.setAttribute("aria-pressed","true");
+  } else {
+    document.body.classList.remove("dark");
+    modeToggle.textContent = "🌙";
+    modeToggle.setAttribute("aria-pressed","false");
+  }
+}
+
 modeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-  modeToggle.textContent = document.body.classList.contains("dark")
-    ? "☀ Light Mode"
-    : "🌙 Dark Mode";
+  const isDark = document.body.classList.toggle("dark");
+  modeToggle.textContent = isDark ? "☀" : "🌙";
+  modeToggle.setAttribute("aria-pressed", String(isDark));
+  localStorage.setItem("dark-mode", isDark ? "true" : "false");
 });
 
-// Initial Load
-saveRender();
+/* Init */
+loadMode();
+renderAll();
