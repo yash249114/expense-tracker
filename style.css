@@ -1,0 +1,223 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, #4b79a1, #283e51);
+  font-family: "Poppins", sans-serif;
+  color: #ffffff;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1100px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* Accessibility Buttons */
+.accessibility-controls {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.accessibility-controls button {
+  padding: 10px 15px;
+  background: #1e293b;
+  border: none;
+  cursor: pointer;
+  color: white;
+  border-radius: 8px;
+}
+
+/* Balance Card */
+.balance-container {
+  background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+  padding: 25px;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.balance-container h1 {
+  font-size: 2.3rem;
+}
+
+/* Summary Grid */
+.summary {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.income, .expenses {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+.income h3 { color: #10b981; }
+.expenses h3 { color: #ef4444; }
+
+.income p { color: #10b981; font-size: 1.5rem; }
+.expenses p { color: #ef4444; font-size: 1.5rem; }
+
+/* Layout */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+/* Transactions */
+#transaction-list {
+  list-style: none;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.transaction {
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border-right: 6px solid;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+.transaction.income { border-right-color: #10b981; }
+.transaction.expense { border-right-color: #ef4444; }
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+/* Form */
+.form-container {
+  background: #eef2ff;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #cbd5e1;
+  margin-bottom: 10px;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4b79a1, #6a82fb);
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* DARK MODE */
+.dark-mode body,
+.dark-mode .container {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode .balance-container {
+  background: linear-gradient(135deg, #2244b8, #8c1f40) !important;
+  color: white !important;
+}
+
+.dark-mode h1, 
+.dark-mode h2, 
+.dark-mode h3, 
+.dark-mode p, 
+.dark-mode label, 
+.dark-mode small {
+  color: #ffffff !important;
+}
+
+.dark-mode .income,
+.dark-mode .expenses,
+.dark-mode .transaction,
+.dark-mode .form-container {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+.dark-mode input {
+  background: #0f172a !important;
+  color: white !important;
+  border: 2px solid #475569 !important;
+}
+
+.dark-mode button {
+  background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+}
+
+/* HIGH CONTRAST MODE */
+.high-contrast body,
+.high-contrast .container {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3,
+.high-contrast p,
+.high-contrast label,
+.high-contrast small {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.high-contrast .income,
+.high-contrast .expenses,
+.high-contrast .transaction,
+.high-contrast .form-container,
+.high-contrast .balance-container {
+  background: #ffffff !important;
+  border: 3px solid #000 !important;
+  color: #000 !important;
+}
+
+.high-contrast input {
+  background: #ffffff !important;
+  border: 3px solid #000 !important;
+}
+
+.high-contrast button {
+  background: #ffffff !important;
+  color: #000 !important;
+  border: 3px solid #000 !important;
+}
